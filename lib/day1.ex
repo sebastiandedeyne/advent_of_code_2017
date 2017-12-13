@@ -11,12 +11,11 @@ defmodule AdventOfCode2017.Day1 do
       ...> |> AdventOfCode2017.Day1.inverse_captcha()
       1216
   """
-  def inverse_captcha(numbers) do
-    numbers
-    |> string_to_numbers()
+  def inverse_captcha(input) do
+    input
+    |> to_numbers()
     |> pair_with_next()
-    |> get_duplicates()
-    |> sum()
+    |> summate_duplicates()
   end
 
   @doc """
@@ -35,48 +34,35 @@ defmodule AdventOfCode2017.Day1 do
       ...> |> AdventOfCode2017.Day1.inverse_captcha_circular()
       1072
   """
-  def inverse_captcha_circular(numbers) do
-    numbers
-    |> string_to_numbers()
-    |> pair_with_circular_opposite()
-    |> get_duplicates()
-    |> sum()
+  def inverse_captcha_circular(input) do
+    input
+    |> to_numbers()
+    |> pair_with_circular_opposites()
+    |> summate_duplicates()
   end
 
-  defp string_to_numbers(string) do
+  defp to_numbers(string) do
     string
     |> String.codepoints()
-    |> Enum.map(fn s -> String.to_integer(s) end)
+    |> Enum.map(&String.to_integer/1)
   end
 
   defp pair_with_next(numbers) do
-    numbers
-    |> Enum.with_index()
-    |> Enum.map(fn {number, index} ->
-      {number, Enum.at(numbers, index + 1, Enum.at(numbers, 0))}
-    end)
+    Enum.zip(numbers, Enum.take(numbers, -1) ++ numbers)
   end
 
-  defp pair_with_circular_opposite(numbers) do
-    halfway = round(length(numbers) / 2)
-
+  defp pair_with_circular_opposites(numbers) do
     numbers
-    |> Enum.with_index()
-    |> Enum.map(fn {number, index} ->
-      cond do
-        index >= halfway -> {number, Enum.at(numbers, index - halfway)}
-        true -> {number, Enum.at(numbers, index + halfway)}
-      end
-    end)
+    |> Enum.chunk_every(round(length(numbers) / 2))
+    |> Enum.reverse()
+    |> Enum.concat()
+    |> (&Enum.zip(numbers, &1)).()
   end
 
-  defp get_duplicates(numbers) do
+  defp summate_duplicates(numbers) do
     numbers
     |> Enum.filter(fn {n, m} -> n == m end)
     |> Enum.map(fn {n, _} -> n end)
+    |> Enum.sum()
   end
-
-  defp sum(list), do: sum(list, 0)
-  defp sum([], acc), do: acc
-  defp sum([h | t], acc), do: sum(t, acc + h)
 end
